@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- イエロー背景（角丸正方形） -->
+  <rect width="32" height="32" rx="8" fill="#EAB308"/>
+  <!-- イニシャル「E」（チャコール・太字） -->
+  <text
+    x="16"
+    y="23"
+    text-anchor="middle"
+    font-family="Inter, Arial, sans-serif"
+    font-weight="800"
+    font-size="20"
+    fill="#1C1C1E"
+  >E</text>
+</svg>

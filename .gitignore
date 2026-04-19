@@ -1,0 +1,39 @@
+# 依存関係フォルダ（npm installで再生成できるため除外）
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Next.jsのビルド出力（デプロイ時に生成されるため除外）
+/.next/
+/out/
+
+# 本番ビルド
+/build
+
+# 環境変数ファイル（APIキーなどの秘密情報を含むため必ず除外）
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ログファイル
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOSのシステムファイル
+.DS_Store
+
+# TypeScriptキャッシュ
+*.tsbuildinfo
+next-env.d.ts
+
+# 内部作業ドキュメント（GitHubには不要）
+要件定義書_portfolio.md
+設計書_portfolio.md
+CLAUDE.md
+
+# Claude Code のローカル設定（個人の権限設定のため除外）
+.claude/settings.local.json
