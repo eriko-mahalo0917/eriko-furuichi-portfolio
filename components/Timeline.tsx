@@ -23,7 +23,7 @@ const TIMELINE_EVENTS = [
   {
     year: "2024",
     title: "生成AI導入推進",
-    description: "ChatGPT・Claude 等の生成AIを業務活用する社内プロジェクトを主導。現場への展開・教育も担当。",
+    description: "Google WorkspaceでGeminiを導入し、TeamsのCopilotを社員・スタッフが活用できる環境を整備。現場への展開・教育も担当。",
     highlight: false,
   },
   {
