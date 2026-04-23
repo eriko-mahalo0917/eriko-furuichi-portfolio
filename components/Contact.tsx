@@ -25,7 +25,7 @@ export default function Contact() {
             Contact
           </p>
           {/* タイトルを text-4xl に拡大 */}
-          <h2 className="text-5xl font-black text-charcoal mb-6">一緒に働きませんか？</h2>
+          <h2 className="text-5xl font-black text-charcoal mb-6">まずは話してみませんか？</h2>
 
           {/* アピール文（短く・具体的に） */}
           <div className="max-w-2xl mx-auto mb-10 space-y-2">
