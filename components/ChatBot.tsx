@@ -92,7 +92,7 @@ export default function ChatBot() {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
             className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-            style={{ height: "520px" }}
+            style={{ height: "min(520px, calc(100dvh - 100px))" }}
           >
             {/* ヘッダー */}
             <div className="bg-charcoal px-4 py-3">
