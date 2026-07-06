@@ -1,6 +1,6 @@
 // ChatBot.tsx：チャットBotウィジェットコンポーネント
-// 画面右下に常駐するチャットアイコン。クリックするとチャット画面が開く。
-// グリーンの「利用可能」インジケーター付き。就活先への強いアピールポイント。
+// スマホ：フルスクリーンオーバーレイで表示（キーボードに隠れない）
+// PC  ：画面右下の浮かぶウィンドウで表示
 
 "use client";
 
@@ -33,8 +33,8 @@ export default function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   // 未読メッセージ数（チャットが閉じているときに表示するバッジ）
   const [unread, setUnread]       = useState(1);
-  // iOSでキーボードが開いたときに送信欄が隠れないよう、チャット全体を上にずらす量
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
+  // スマホ判定（640px未満 = Tailwindのsmブレークポイント）
+  const [isMobile, setIsMobile]   = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -43,20 +43,12 @@ export default function ChatBot() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // iOSなどでキーボードが表示されたとき、チャットウィンドウをキーボードの上に移動する
-  // visualViewport APIを使うと、実際に見えている画面サイズの変化を検知できる
+  // 画面幅を監視してスマホ判定を更新する
   useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    const handleResize = () => {
-      // キーボードが占めている高さ = ウィンドウ全体の高さ - 表示されている高さ
-      const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-      setKeyboardOffset(Math.max(0, keyboardHeight));
-    };
-
-    vv.addEventListener("resize", handleResize);
-    return () => vv.removeEventListener("resize", handleResize);
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check(); // 初期チェック
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
 
   // チャットを開いたとき未読バッジをリセット
@@ -69,8 +61,7 @@ export default function ChatBot() {
   const handleSend = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, { role: "user", content: text }]);
     setInput("");
     setIsLoading(true);
 
@@ -81,13 +72,15 @@ export default function ChatBot() {
     });
 
     const data = await response.json();
-    const botMessage: Message = {
-      role: "bot",
-      content: response.ok
-        ? data.reply
-        : "申し訳ありません。エラーが発生しました。しばらく経ってからお試しください。",
-    };
-    setMessages((prev) => [...prev, botMessage]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        content: response.ok
+          ? data.reply
+          : "申し訳ありません。エラーが発生しました。しばらく経ってからお試しください。",
+      },
+    ]);
     setIsLoading(false);
   };
 
@@ -98,219 +91,253 @@ export default function ChatBot() {
     }
   };
 
-  return (
-    <div
-      className="fixed right-6 z-50 flex flex-col items-end gap-3"
-      style={{ bottom: `${keyboardOffset + 24}px` }}
-    >
+  // ── チャットウィンドウの中身（モバイル・PCで共通） ────────────
+  const chatContent = (
+    <>
+      {/* ヘッダー */}
+      <div className="bg-charcoal px-4 py-3 shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            {/* アバター */}
+            <div className="relative">
+              <div className="w-9 h-9 bg-yellow-primary rounded-full flex items-center justify-center text-sm font-bold text-charcoal font-en">
+                E
+              </div>
+              {/* グリーンの「利用可能」インジケーター */}
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-charcoal rounded-full" />
+            </div>
 
-      {/* ── チャットウィンドウ ─────────────────────────────── */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-            style={{ height: "min(520px, calc(100dvh - 100px))" }}
+            <div>
+              <p className="text-white text-sm font-bold leading-tight">
+                Eriko&apos;s Assistant
+              </p>
+              {/* オンライン状態 */}
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-green-400 text-xs">オンライン・今すぐ応答可能</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 閉じるボタン */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-gray-400 hover:text-white transition-colors"
+            aria-label="チャットを閉じる"
           >
-            {/* ヘッダー */}
-            <div className="bg-charcoal px-4 py-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  {/* アバター */}
-                  <div className="relative">
-                    <div className="w-9 h-9 bg-yellow-primary rounded-full flex items-center justify-center text-sm font-bold text-charcoal font-en">
-                      E
-                    </div>
-                    {/* グリーンの「利用可能」インジケーター */}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-charcoal rounded-full" />
-                  </div>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-                  <div>
-                    <p className="text-white text-sm font-bold leading-tight">
-                      Eriko&apos;s Assistant
-                    </p>
-                    {/* オンライン状態 */}
-                    <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                      <span className="text-green-400 text-xs">オンライン・今すぐ応答可能</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Claude API バッジ */}
+        <div className="flex items-center gap-1.5 bg-white/10 rounded-lg px-3 py-1.5">
+          <svg className="w-3.5 h-3.5 text-yellow-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span className="text-gray-300 text-xs">
+            Powered by <span className="text-yellow-primary font-semibold">Claude API</span> — 古市の情報を学習済み
+          </span>
+        </div>
+      </div>
 
-                {/* 閉じるボタン */}
+      {/* メッセージ一覧 */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+          >
+            {/* Botアイコン */}
+            {msg.role === "bot" && (
+              <div className="w-6 h-6 bg-charcoal rounded-full flex items-center justify-center text-xs font-bold text-yellow-primary shrink-0 mt-0.5 font-en">
+                E
+              </div>
+            )}
+
+            <div
+              className={`
+                max-w-[80%] px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed
+                ${msg.role === "user"
+                  ? "bg-yellow-primary text-charcoal font-medium rounded-br-sm"
+                  : "bg-white text-charcoal shadow-sm border border-gray-100 rounded-bl-sm"
+                }
+              `}
+            >
+              {msg.content}
+            </div>
+          </div>
+        ))}
+
+        {/* ローディング（Botが考え中） */}
+        {isLoading && (
+          <div className="flex gap-2 justify-start">
+            <div className="w-6 h-6 bg-charcoal rounded-full flex items-center justify-center text-xs font-bold text-yellow-primary shrink-0 mt-0.5 font-en">
+              E
+            </div>
+            <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100">
+              <div className="flex gap-1 items-center">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-2 h-2 bg-yellow-primary rounded-full"
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* よくある質問サジェスト（最初のメッセージのみ） */}
+        {messages.length === 1 && !isLoading && (
+          <div className="mt-3">
+            <p className="text-gray-400 text-xs mb-2 text-center">よくある質問</p>
+            <div className="flex flex-col gap-2">
+              {SUGGESTIONS.map((s) => (
                 <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                  aria-label="チャットを閉じる"
+                  key={s.text}
+                  onClick={() => handleSend(s.text)}
+                  className="text-left text-sm px-4 py-2.5 bg-white text-charcoal rounded-xl border border-gray-200 hover:border-yellow-primary hover:bg-yellow-light transition-all duration-150 shadow-sm"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  {s.label}
                 </button>
-              </div>
-
-              {/* Claude API バッジ */}
-              <div className="flex items-center gap-1.5 bg-white/10 rounded-lg px-3 py-1.5">
-                <svg className="w-3.5 h-3.5 text-yellow-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span className="text-gray-300 text-xs">
-                  Powered by <span className="text-yellow-primary font-semibold">Claude API</span> — 古市の情報を学習済み
-                </span>
-              </div>
-            </div>
-
-            {/* メッセージ一覧 */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  {/* Botアイコン */}
-                  {msg.role === "bot" && (
-                    <div className="w-6 h-6 bg-charcoal rounded-full flex items-center justify-center text-xs font-bold text-yellow-primary shrink-0 mt-0.5 font-en">
-                      E
-                    </div>
-                  )}
-
-                  <div
-                    className={`
-                      max-w-[80%] px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed
-                      ${msg.role === "user"
-                        ? "bg-yellow-primary text-charcoal font-medium rounded-br-sm"
-                        : "bg-white text-charcoal shadow-sm border border-gray-100 rounded-bl-sm"
-                      }
-                    `}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
               ))}
-
-              {/* ローディング（Botが考え中） */}
-              {isLoading && (
-                <div className="flex gap-2 justify-start">
-                  <div className="w-6 h-6 bg-charcoal rounded-full flex items-center justify-center text-xs font-bold text-yellow-primary shrink-0 mt-0.5 font-en">
-                    E
-                  </div>
-                  <div className="bg-white px-4 py-3 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100">
-                    <div className="flex gap-1 items-center">
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          className="w-2 h-2 bg-yellow-primary rounded-full"
-                          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-                          transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* よくある質問サジェスト（最初のメッセージのみ） */}
-              {messages.length === 1 && !isLoading && (
-                <div className="mt-3">
-                  <p className="text-gray-400 text-xs mb-2 text-center">よくある質問</p>
-                  <div className="flex flex-col gap-2">
-                    {SUGGESTIONS.map((s) => (
-                      <button
-                        key={s.text}
-                        onClick={() => handleSend(s.text)}
-                        className="text-left text-sm px-4 py-2.5 bg-white text-charcoal rounded-xl border border-gray-200 hover:border-yellow-primary hover:bg-yellow-light transition-all duration-150 shadow-sm"
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div ref={bottomRef} />
             </div>
+          </div>
+        )}
 
-            {/* 入力エリア */}
-            <div className="border-t border-gray-100 px-3 py-3 flex gap-2 bg-white">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="メッセージを入力..."
-                disabled={isLoading}
-                className="flex-1 text-sm px-3 py-2 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-yellow-primary/50 disabled:opacity-50 transition"
-              />
-              <button
-                onClick={() => handleSend(input)}
-                disabled={isLoading || !input.trim()}
-                className="w-9 h-9 bg-yellow-primary text-charcoal rounded-xl flex items-center justify-center hover:bg-yellow-dark hover:text-white transition-colors disabled:opacity-40"
-                aria-label="送信"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
-            </div>
+        <div ref={bottomRef} />
+      </div>
+
+      {/* 入力エリア */}
+      {/* onPointerDown + preventDefault：iOSでタップ時にフォーカスが外れる前に送信を確定させるため */}
+      <div className="border-t border-gray-100 px-3 py-3 flex gap-2 bg-white shrink-0">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="メッセージを入力..."
+          disabled={isLoading}
+          enterKeyHint="send"
+          className="flex-1 text-sm px-3 py-2 bg-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-yellow-primary/50 disabled:opacity-50 transition"
+        />
+        <button
+          onPointerDown={(e) => {
+            // iOSでの「タップしたらキーボードが閉じてボタン位置がずれる」問題を防ぐ
+            // preventDefaultでblurを止め、ポインター押下時点でhandleSendを呼ぶ
+            if (!isLoading && input.trim()) {
+              e.preventDefault();
+              handleSend(input);
+            }
+          }}
+          disabled={isLoading || !input.trim()}
+          className="w-10 h-10 bg-yellow-primary text-charcoal rounded-xl flex items-center justify-center hover:bg-yellow-dark hover:text-white transition-colors disabled:opacity-40 shrink-0"
+          aria-label="送信"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── スマホ: フルスクリーンオーバーレイ ────────────────────
+          100dvh = キーボードが開いたときに自動で縮む動的なビューポート高さ
+          これによりキーボードに入力欄が隠れなくなる                      */}
+      <AnimatePresence>
+        {isOpen && isMobile && (
+          <motion.div
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed top-0 left-0 right-0 z-50 flex flex-col bg-white"
+            style={{ height: "100dvh" }}
+          >
+            {chatContent}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── チャットアイコンボタン ─────────────────────────── */}
-      <div className="relative">
-        <motion.button
-          onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-          className="w-14 h-14 bg-yellow-primary rounded-full shadow-lg flex items-center justify-center hover:bg-yellow-dark transition-colors"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="チャットBotを開く"
-        >
-          <AnimatePresence mode="wait">
-            {isOpen ? (
-              <motion.svg
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="w-6 h-6 text-charcoal"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+      {/* ── PC: 右下に浮かぶウィジェット ────────────────────────── */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <AnimatePresence>
+          {isOpen && !isMobile && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+              style={{ height: "520px" }}
+            >
+              {chatContent}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* チャットアイコンボタン（スマホでチャット中は非表示） */}
+        {(!isMobile || !isOpen) && (
+          <div className="relative">
+            <motion.button
+              onClick={isOpen ? () => setIsOpen(false) : handleOpen}
+              className="w-14 h-14 bg-yellow-primary rounded-full shadow-lg flex items-center justify-center hover:bg-yellow-dark transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="チャットBotを開く"
+            >
+              <AnimatePresence mode="wait">
+                {isOpen ? (
+                  <motion.svg
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-6 h-6 text-charcoal"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </motion.svg>
+                ) : (
+                  <motion.svg
+                    key="chat"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="w-6 h-6 text-charcoal"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </motion.svg>
+                )}
+              </AnimatePresence>
+            </motion.button>
+
+            {/* グリーンの「利用可能」インジケーター */}
+            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full" />
+
+            {/* 未読バッジ（チャットが閉じているときだけ表示） */}
+            {!isOpen && unread > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -left-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </motion.svg>
-            ) : (
-              <motion.svg
-                key="chat"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="w-6 h-6 text-charcoal"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </motion.svg>
+                {unread}
+              </motion.span>
             )}
-          </AnimatePresence>
-        </motion.button>
-
-        {/* グリーンの「利用可能」インジケーター */}
-        <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-green-400 border-2 border-white rounded-full" />
-
-        {/* 未読バッジ（チャットが閉じているときだけ表示） */}
-        {!isOpen && unread > 0 && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -left-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
-          >
-            {unread}
-          </motion.span>
+          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
