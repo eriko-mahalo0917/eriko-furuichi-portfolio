@@ -33,6 +33,8 @@ export default function ChatBot() {
   const [isLoading, setIsLoading] = useState(false);
   // 未読メッセージ数（チャットが閉じているときに表示するバッジ）
   const [unread, setUnread]       = useState(1);
+  // iOSでキーボードが開いたときに送信欄が隠れないよう、チャット全体を上にずらす量
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +42,22 @@ export default function ChatBot() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // iOSなどでキーボードが表示されたとき、チャットウィンドウをキーボードの上に移動する
+  // visualViewport APIを使うと、実際に見えている画面サイズの変化を検知できる
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      // キーボードが占めている高さ = ウィンドウ全体の高さ - 表示されている高さ
+      const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+      setKeyboardOffset(Math.max(0, keyboardHeight));
+    };
+
+    vv.addEventListener("resize", handleResize);
+    return () => vv.removeEventListener("resize", handleResize);
+  }, []);
 
   // チャットを開いたとき未読バッジをリセット
   const handleOpen = () => {
@@ -81,7 +99,10 @@ export default function ChatBot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div
+      className="fixed right-6 z-50 flex flex-col items-end gap-3"
+      style={{ bottom: `${keyboardOffset + 24}px` }}
+    >
 
       {/* ── チャットウィンドウ ─────────────────────────────── */}
       <AnimatePresence>
