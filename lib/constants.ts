@@ -23,7 +23,7 @@ export const PROFILE = {
 export const STATS = [
   { value: 12, unit: "年",   label: "バックオフィス経験" },
   { value: 6,  unit: "本",   label: "開発したツール数"   },  // ← 5本→6本（備品管理追加）
-  { value: 8,  unit: "ヶ月", label: "Python独学期間"     },
+  { value: 11, unit: "ヶ月", label: "Python独学期間"     },
   { value: 4,  unit: "種類", label: "活用した外部API数"  },  // ← 3種類→4種類（実数に修正）
 ] as const;
 

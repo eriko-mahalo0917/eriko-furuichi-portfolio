@@ -24,7 +24,7 @@ export const systemPrompt = `
 - 12年間チーフとして培った、課題発見力・改善推進力・チームへの説明力。
 
 【スキル】
-- Python（独学8ヶ月・ツール6本開発）
+- Python（独学11ヶ月・ツール6本開発）
 - TypeScript / Next.js（学習中・このポートフォリオサイト自体をNext.jsで構築）
 - 外部API連携：楽天API・Google Maps API・LINE Messaging API・OpenWeatherMap API（4種類）
 - 生成AI活用：Claude API・Claude Code・NotebookLM・GitHub Copilot・Gemini

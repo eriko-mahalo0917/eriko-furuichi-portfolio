@@ -16,7 +16,7 @@ function getMockReply(message: string): string {
     return "Pythonで5本のツールを開発しました！\n① 楽天市場 価格チェッカー\n② クリニック情報リサーチツール\n③ 天気予報 LINE通知ボット\n④ 書籍データ スクレイピングツール\n⑤ ブラウザ自動ログインツール\n\nGitHubでコードを公開しています😊";
   }
   if (msg.includes("スキル") || msg.includes("技術") || msg.includes("できる")) {
-    return "主なスキルはこちらです！\n• Python（独学8ヶ月）\n• 外部API連携（楽天・Google Maps・LINE・OpenWeatherMap）\n• 生成AI活用（Claude・NotebookLM・Gemini）\n• Selenium / BeautifulSoup4\n• TypeScript / Next.js（学習中）";
+    return "主なスキルはこちらです！\n• Python（独学11ヶ月）\n• 外部API連携（楽天・Google Maps・LINE・OpenWeatherMap）\n• 生成AI活用（Claude・NotebookLM・Gemini）\n• Selenium / BeautifulSoup4\n• TypeScript / Next.js（学習中）";
   }
   if (msg.includes("経験") || msg.includes("経歴") || msg.includes("仕事")) {
     return "健康食品通販会社でチーフとして12年勤務しました。\nバックオフィス業務全般・基幹システム刷新・生成AI導入・業務改善を推進してきました。現場のリアルな課題をよく知っています💪";
