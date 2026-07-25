@@ -10,6 +10,7 @@ import { motion, useInView } from "framer-motion";
 type SkillCategory = {
   category: string;   // カテゴリ名
   skills: string[];   // スキルの配列
+  note?: string;      // カード下部に表示する補足メモ（任意）
 };
 
 // スキルデータを定数として定義
@@ -21,6 +22,7 @@ const SKILL_CATEGORIES: SkillCategory[] = [
   {
     category: "フロントエンド",
     skills: ["Next.js", "React", "Tailwind CSS"],
+    note: "Claude Code（AI）と協働して開発",
   },
   {
     category: "自動化・RPA",
@@ -90,6 +92,13 @@ export default function Skills() {
                   </li>
                 ))}
               </ul>
+
+              {/* AI支援などの補足メモ（noteがある場合のみ表示） */}
+              {item.note && (
+                <p className="mt-3 text-xs text-gray-400 border-t border-gray-200 pt-2">
+                  🤖 {item.note}
+                </p>
+              )}
             </motion.div>
           ))}
         </div>
