@@ -100,14 +100,14 @@ export default function Skills() {
                   // aiAssistedSkillsにスキル名が含まれていればAI支援マークを表示する
                   const isAiSkill = item.aiAssistedSkills?.includes(skill) ?? false;
                   return (
-                    <li key={skill} className="flex items-start gap-2 text-charcoal text-sm">
+                    <li key={skill} className="flex items-center gap-2 text-charcoal text-sm">
                       {/* アクセントカラーのチェックマーク */}
-                      <span className="text-yellow-primary shrink-0 mt-0.5">▸</span>
+                      <span className="text-yellow-primary shrink-0">▸</span>
                       <span>{skill}</span>
-                      {/* AI支援スキルには小さいバッジを付ける */}
+                      {/* AI支援スキルにはスキル名のすぐ横にバッジを付ける */}
                       {isAiSkill && (
-                        <span className="ml-auto shrink-0 text-xs bg-charcoal text-yellow-primary font-bold px-1.5 py-0.5 rounded-full">
-                          🤖
+                        <span className="shrink-0 text-xs bg-charcoal text-yellow-primary font-bold px-1.5 py-0.5 rounded-full">
+                          🤖 AI支援
                         </span>
                       )}
                     </li>
