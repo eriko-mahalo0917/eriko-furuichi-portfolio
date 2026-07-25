@@ -8,10 +8,11 @@ import { motion, useInView } from "framer-motion";
 
 // スキルデータの型定義
 type SkillCategory = {
-  category: string;   // カテゴリ名
-  skills: string[];   // スキルの配列
-  note?: string;      // カード下部に表示する補足メモ（任意）
-  aiAssisted?: boolean; // AI支援で習得・開発した場合はtrue
+  category: string;        // カテゴリ名
+  skills: string[];        // スキルの配列
+  note?: string;           // カード下部に表示する補足メモ（任意）
+  aiAssisted?: boolean;    // カード全体をAI支援とみなす場合はtrue
+  aiAssistedSkills?: string[]; // 特定スキルだけにAI支援マークをつける場合に指定
 };
 
 // スキルデータを定数として定義
@@ -19,6 +20,7 @@ const SKILL_CATEGORIES: SkillCategory[] = [
   {
     category: "言語",
     skills: ["Python", "TypeScript（学習中）", "Google Apps Script"],
+    aiAssistedSkills: ["Google Apps Script"],
   },
   {
     category: "フロントエンド",
@@ -94,13 +96,23 @@ export default function Skills() {
 
               {/* スキルのリスト */}
               <ul className="space-y-1.5">
-                {item.skills.map((skill) => (
-                  <li key={skill} className="flex items-start gap-2 text-charcoal text-sm">
-                    {/* アクセントカラーのチェックマーク */}
-                    <span className="text-yellow-primary shrink-0 mt-0.5">▸</span>
-                    <span>{skill}</span>
-                  </li>
-                ))}
+                {item.skills.map((skill) => {
+                  // aiAssistedSkillsにスキル名が含まれていればAI支援マークを表示する
+                  const isAiSkill = item.aiAssistedSkills?.includes(skill) ?? false;
+                  return (
+                    <li key={skill} className="flex items-start gap-2 text-charcoal text-sm">
+                      {/* アクセントカラーのチェックマーク */}
+                      <span className="text-yellow-primary shrink-0 mt-0.5">▸</span>
+                      <span>{skill}</span>
+                      {/* AI支援スキルには小さいバッジを付ける */}
+                      {isAiSkill && (
+                        <span className="ml-auto shrink-0 text-xs bg-charcoal text-yellow-primary font-bold px-1.5 py-0.5 rounded-full">
+                          🤖
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
 
               {/* AI支援などの補足メモ（noteがある場合のみ表示） */}
