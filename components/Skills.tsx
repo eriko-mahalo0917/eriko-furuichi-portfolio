@@ -11,6 +11,7 @@ type SkillCategory = {
   category: string;   // カテゴリ名
   skills: string[];   // スキルの配列
   note?: string;      // カード下部に表示する補足メモ（任意）
+  aiAssisted?: boolean; // AI支援で習得・開発した場合はtrue
 };
 
 // スキルデータを定数として定義
@@ -23,6 +24,7 @@ const SKILL_CATEGORIES: SkillCategory[] = [
     category: "フロントエンド",
     skills: ["Next.js", "React", "Tailwind CSS"],
     note: "Claude Code（AI）と協働して開発",
+    aiAssisted: true,
   },
   {
     category: "自動化・RPA",
@@ -77,10 +79,18 @@ export default function Skills() {
               // ホバー時に少し浮き上がるアニメーション
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
-              {/* カテゴリタイトル */}
-              <h3 className="text-yellow-primary font-en font-semibold text-xs tracking-widest uppercase mb-3">
-                {item.category}
-              </h3>
+              {/* カテゴリタイトルとAI支援バッジ */}
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-yellow-primary font-en font-semibold text-xs tracking-widest uppercase">
+                  {item.category}
+                </h3>
+                {/* AI支援フラグがtrueのカードだけバッジを表示 */}
+                {item.aiAssisted && (
+                  <span className="inline-flex items-center gap-1 bg-charcoal text-yellow-primary text-xs font-bold px-2 py-0.5 rounded-full">
+                    🤖 AI支援
+                  </span>
+                )}
+              </div>
 
               {/* スキルのリスト */}
               <ul className="space-y-1.5">
